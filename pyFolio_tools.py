@@ -19,6 +19,11 @@ import time
 
 
 def format_data(file):
+    
+    """reads the relevant security .csv file into a pandas dataframe
+    and formats the dataframe"""
+    
+    
     data = pd.read_csv(file)
     data.index = list(data.iloc[:,0])
     data = data.iloc[:,1:]
@@ -28,6 +33,8 @@ def format_data(file):
 
 def format_treasury_rates(path):
     
+    """writes a pandas dataframe containing US treasury bond rates,
+    and formats the dataframe for further use"""
     
     data = pd.read_csv(path)
     dates = list(data.iloc[:,0])
@@ -51,6 +58,9 @@ def format_treasury_rates(path):
 
 def get_treasury_data(path,start,end):
     
+    """collects US treasury bond rates of different maturities, from
+    the included treasury_rates.csv"""
+    
     if start == '01/01/1990':
         treasury_data = None
         print('no treasury data for this date')
@@ -65,6 +75,8 @@ def get_treasury_data(path,start,end):
 
 def get_betas(file,start,end):
     
+    """calculates betas for a given security by
+    analyzing a formatted .csv file"""
         
 
 
@@ -107,6 +119,8 @@ def get_betas(file,start,end):
 
 
 def nan_check(treasury_data,date,mat):
+    """makes sure selected treasury dataframe element
+    is not nan"""
     
     rf = float(treasury_data.loc[date,mat])
     if math.isnan(rf):
@@ -123,6 +137,11 @@ def nan_check(treasury_data,date,mat):
     
 
 def get_maturity(dates,freq):
+    
+    """determines the correct maturity of treasury bond to use
+    based on the current time interval's relationship to the starting 
+    date selected"""
+    
     if freq == 'monthly' or freq == 'Monthly':
         mod = 0.25
     elif freq == 'weekly' or freq == 'Weekly':
@@ -193,6 +212,11 @@ def get_maturity(dates,freq):
 
 def check_another_date(date,mat,treasury_data,num):
     
+    """if the date selected does not occur in the treasury bond
+    dataframe index, this script looks for another day that is one
+    or two days ahead or behind the original date and in the treasury 
+    bond dataframe index"""
+    
     new_date = date.split('/')
     new_date[1] = str(int(new_date[1]) + num)
     if len(new_date[1]) == 1:
@@ -203,6 +227,9 @@ def check_another_date(date,mat,treasury_data,num):
     return rf
 
 def get_risk_free(dates,treasury_data_path,start,end,freq):
+    
+    """determines  risk free rates of a set of dates between
+    the start and end parameters"""
 
     treasury_data = get_treasury_data(treasury_data_path,start,end)
     
@@ -242,6 +269,8 @@ def get_risk_free(dates,treasury_data_path,start,end,freq):
 
 def get_alphas(portfolio_returns,risk_free,market_returns,betas):
     
+    """generates the alphas of a portfolio for a certain historical interval"""
+    
     R = portfolio_returns
     Rf = risk_free
     Beta = betas
@@ -253,6 +282,11 @@ def get_alphas(portfolio_returns,risk_free,market_returns,betas):
 
 
 def check_proportion_list(proportions):
+    
+    """makes sure that the proportion set(s) are the correct
+    data type: list of integers or list of lists of integers. makes 
+    sure that the elements of each proportion set = 1."""
+    
     if str(type(proportions[0])) == "<class 'float'>":
         prop_type = 'list'
         count = 0.00
@@ -294,6 +328,9 @@ def check_proportion_list(proportions):
 
 def get_dates(file,start,end):
     
+    """gets a list of dates between the start and end dates
+    passed to this function"""
+    
     data = format_data(file)
     data = data.loc[start:end,:] 
     dates = list(data.index)
@@ -301,72 +338,5 @@ def get_dates(file,start,end):
     return dates
 
 
-# freq = 'Weekly'
-# betas_p, data_p = get_betas('E:/PythonProjects/Stocks_with_Phil/Formatted_Stocks_Weekly/ACIW.csv',start,end,Flag=False)
-# betas_a, data_a = get_betas('E:/PythonProjects/Stocks_with_Phil/Formatted_Stocks_Weekly/ADBE.csv',start,end,Flag=False)
-# r1 = 0.6
-# r2 = 1 - r1
 
-
-
-# betas = np.array(betas_p)*r1 + np.array(betas_a)*r2
-# dates = list(data_p.index)
-# treasury_data_path = 'E:/PythonProjects/Stocks_with_Phil/Treasury_rates.csv'
-
-
-# treasury_data = get_treasury_data(treasury_data_path,start,end)
-
-# #this only works if your data goes by a weekly frequency
-
-
-# risk_free = get_risk_free(dates,treasury_data_path,start,end,freq)
-
-
-# risk_free_len = len(risk_free)
-# risk_free = np.array(risk_free[risk_free_len-len(betas_p):])
-# market_returns = np.array(data_p.loc[dates[risk_free_len-len(betas)]:end,:].iloc[:,2])
-# p_returns = np.array(data_p.loc[dates[risk_free_len-len(betas)]:end,:].iloc[:,3])
-# a_returns = np.array(data_a.loc[dates[risk_free_len-len(betas)]:end,:].iloc[:,3])
-
-
-
-
-# portfolio_returns = p_returns*r1 + a_returns*r2
-
-# alpha = get_alphas(portfolio_returns,risk_free,market_returns,betas)
-
-
-# avga = np.nanmean(alpha)
-# avgb = np.nanmean(betas)
-
-# times = np.array(list(range(len(alpha))))
-# plt.scatter(betas,alpha)
-# plt.scatter(avgb,avga)
-# plt.xlabel(r'$\beta$')
-# plt.ylabel(r'$\alpha$')
-
-
-
-
-      
-#     # if Flag == True:
-#     #     time = np.array(list(range(len(betas))))
-#     #     slope, intercept, r_value, p_value, std_err = linregress(time,betas)
-        
-        
-    
-#     #     plt.scatter(time,betas)
-#     #     plt.plot(time,intercept + slope*time,'r')
-#     #     plt.xlabel('time (weeks)')
-#     #     plt.ylabel(r'$\beta$')
-#     #     plt.text(1,1,'slope: ' + str(round(slope,4)) + '   R2: ' + str(round(r_value,3)),
-#     #              horizontalalignment='center',
-#     #              verticalalignment='top',
-#     #              multialignment='center')
-
-
-
-# proportions = [[0.25,0.70],[0.5,0.6]]
-
-# Flags = []
 
