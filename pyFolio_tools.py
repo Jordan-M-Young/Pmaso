@@ -73,49 +73,69 @@ def get_treasury_data(path,start,end):
 
     return treasury_data
 
+def get_std(data):
+
+    std = []
+    
+    for i in range(3,len(data)):
+        x = np.array(data[0:i])
+        mu = np.mean(x)
+        N = len(x)
+        
+        sigma = np.sqrt((np.sum((x-mu)**2))/N)
+        std.append(sigma)
+        
+    return np.array(std)
+        
+        
+def gen_covariance(sec_returns,ind_returns):
+    
+    covariances = []
+    for i in range(3,len(sec_returns)):
+        
+        returns_ind_Ti = np.array(ind_returns[0:i])
+        returns_sec_Ti = np.array(sec_returns[0:i])
+        
+        avg_return_sec_Ti = returns_sec_Ti.mean() 
+        avg_return_ind_Ti = returns_ind_Ti.mean() 
+        
+        cov = ((returns_ind_Ti - avg_return_ind_Ti) * (returns_sec_Ti - avg_return_sec_Ti)).sum() 
+        cov = cov / (len(returns_sec_Ti) - 1)
+        
+        covariances.append(cov)
+    
+    return np.array(covariances)
+
+def gen_variance(ind_returns):
+    
+    variances = []
+    for i in range(3,len(ind_returns)):
+        
+        returns_ind_Ti = np.array(ind_returns[0:i])
+        avg_return_ind_Ti = returns_ind_Ti.mean() 
+        var = (((returns_ind_Ti -avg_return_ind_Ti)**2).sum()) / len(returns_ind_Ti)
+        variances.append(var)
+    
+    return np.array(variances)
+        
 def get_betas(file,start,end):
     
-    """calculates betas for a given security by
-    analyzing a formatted .csv file"""
-        
-
-
 
     data = format_data(file)
     data = data.loc[start:end,:]        
      
 
     
-    close_SP5 = data.iloc[:,0]
-    close_PFE = data.iloc[:,1]
-    
-    returns_SP5 = data.iloc[:,2]
-    returns_PFE = data.iloc[:,3]
+    ind_returns = data.iloc[:,2]
+    sec_returns = data.iloc[:,3]
      
     
-    betas = []
-    for i in range(3,len(data)):
-        closeSP5_Ti = np.array(close_SP5[0:i])
-        close_PFE_Ti = np.array(close_PFE[0:i])
-        returns_SP5_Ti = np.array(returns_SP5[0:i])
-        returns_PFE_Ti = np.array(returns_PFE[0:i])
-        
-        avg_return_PFE_Ti = returns_PFE_Ti.mean() 
-        avg_return_SP5_Ti = returns_SP5_Ti.mean() 
-        var = (((returns_SP5_Ti -avg_return_SP5_Ti)**2).sum()) / len(returns_SP5_Ti)
-        
-        cov = ((returns_SP5_Ti - avg_return_SP5_Ti) * (returns_PFE_Ti - avg_return_PFE_Ti)).sum() 
-        cov = cov / (len(returns_SP5_Ti) - 1)
-        
-        
-        beta = cov / var
-        betas.append(beta)
-    
-    
+    cov = gen_covariance(sec_returns,ind_returns)
+    var = gen_variance(ind_returns)
 
-    
+    betas = cov / var
 
-    return betas,data
+    return betas, data
 
 
 def nan_check(treasury_data,date,mat):
@@ -264,7 +284,15 @@ def get_risk_free(dates,treasury_data_path,start,end,freq):
     
     return risk_free
 
+def get_sharpe_ratios(portfolio_returns,risk_free,returns_std):
+    
+    Rp = portfolio_returns
+    Rf = risk_free
+    sigma_p = returns_std
+    
+    sharpe_ratio = (Rp - Rf) / sigma_p
 
+    return sharpe_ratio
 
 
 def get_alphas(portfolio_returns,risk_free,market_returns,betas):
