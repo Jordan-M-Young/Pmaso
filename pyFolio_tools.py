@@ -13,28 +13,23 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 import math
 import time
+from scipy.optimize import leastsq
+from scipy.optimize import minimize, LinearConstraint
 
 
 
 
-
-def format_data(file):
-    
-    """reads the relevant security .csv file into a pandas dataframe
-    and formats the dataframe"""
-    
+def format_data(file,start,end):
     
     data = pd.read_csv(file)
     data.index = list(data.iloc[:,0])
     data = data.iloc[:,1:]
-    
+    data = data.loc[start:end,:]
     return data
 
 
 def format_treasury_rates(path):
     
-    """writes a pandas dataframe containing US treasury bond rates,
-    and formats the dataframe for further use"""
     
     data = pd.read_csv(path)
     dates = list(data.iloc[:,0])
@@ -57,9 +52,6 @@ def format_treasury_rates(path):
     return data
 
 def get_treasury_data(path,start,end):
-    
-    """collects US treasury bond rates of different maturities, from
-    the included treasury_rates.csv"""
     
     if start == '01/01/1990':
         treasury_data = None
@@ -118,16 +110,11 @@ def gen_variance(ind_returns):
     
     return np.array(variances)
         
-def get_betas(file,start,end):
+def get_betas(sec_returns,ind_returns):
     
 
-    data = format_data(file)
-    data = data.loc[start:end,:]        
-     
-
     
-    ind_returns = data.iloc[:,2]
-    sec_returns = data.iloc[:,3]
+   
      
     
     cov = gen_covariance(sec_returns,ind_returns)
@@ -135,12 +122,12 @@ def get_betas(file,start,end):
 
     betas = cov / var
 
-    return betas, data
+    return betas
+
+
 
 
 def nan_check(treasury_data,date,mat):
-    """makes sure selected treasury dataframe element
-    is not nan"""
     
     rf = float(treasury_data.loc[date,mat])
     if math.isnan(rf):
@@ -157,11 +144,6 @@ def nan_check(treasury_data,date,mat):
     
 
 def get_maturity(dates,freq):
-    
-    """determines the correct maturity of treasury bond to use
-    based on the current time interval's relationship to the starting 
-    date selected"""
-    
     if freq == 'monthly' or freq == 'Monthly':
         mod = 0.25
     elif freq == 'weekly' or freq == 'Weekly':
@@ -232,11 +214,6 @@ def get_maturity(dates,freq):
 
 def check_another_date(date,mat,treasury_data,num):
     
-    """if the date selected does not occur in the treasury bond
-    dataframe index, this script looks for another day that is one
-    or two days ahead or behind the original date and in the treasury 
-    bond dataframe index"""
-    
     new_date = date.split('/')
     new_date[1] = str(int(new_date[1]) + num)
     if len(new_date[1]) == 1:
@@ -247,9 +224,6 @@ def check_another_date(date,mat,treasury_data,num):
     return rf
 
 def get_risk_free(dates,treasury_data_path,start,end,freq):
-    
-    """determines  risk free rates of a set of dates between
-    the start and end parameters"""
 
     treasury_data = get_treasury_data(treasury_data_path,start,end)
     
@@ -284,6 +258,10 @@ def get_risk_free(dates,treasury_data_path,start,end,freq):
     
     return risk_free
 
+
+    
+        
+
 def get_sharpe_ratios(portfolio_returns,risk_free,returns_std):
     
     Rp = portfolio_returns
@@ -295,11 +273,9 @@ def get_sharpe_ratios(portfolio_returns,risk_free,returns_std):
     return sharpe_ratio
 
 
-def get_alphas(portfolio_returns,risk_free,market_returns,betas):
+def get_alphas(returns,risk_free,market_returns,betas):
     
-    """generates the alphas of a portfolio for a certain historical interval"""
-    
-    R = portfolio_returns
+    R = returns
     Rf = risk_free
     Beta = betas
     Rm = market_returns
@@ -310,11 +286,6 @@ def get_alphas(portfolio_returns,risk_free,market_returns,betas):
 
 
 def check_proportion_list(proportions):
-    
-    """makes sure that the proportion set(s) are the correct
-    data type: list of integers or list of lists of integers. makes 
-    sure that the elements of each proportion set = 1."""
-    
     if str(type(proportions[0])) == "<class 'float'>":
         prop_type = 'list'
         count = 0.00
@@ -354,17 +325,94 @@ def check_proportion_list(proportions):
     return proportions, prop_type
     
 
-def get_dates(file,start,end):
+def get_dates(data,start,end):
     
-    """gets a list of dates between the start and end dates
-    passed to this function"""
+    """Gets a list of dates between the start and end dates"""
     
-    data = format_data(file)
     data = data.loc[start:end,:] 
     dates = list(data.index)
     
     return dates
 
 
+def obj_func_neg_inverse(x,constants):
+    
+    """objective function where the output is equivalent to one over the
+    dot product of the parameter values for each indiviudal stock in the 
+    portfolio(constants) and the proportions of each stock held(x) multiplied
+    by -1. This allows minimization of any parameter whose ideal value is in 
+    the range:   0 < value < 1 (beta)"""
+    
+    y =  1 / -x.dot(constants)
+    
+    return y
 
+def obj_func_neg(x,constants):
+    
+    """objective function where the output is equivalent to the
+    dot product of the parameter values for each indiviudal stock in the 
+    portfolio(constants) and the proportions of each stock held(x) multiplied
+    by -1. This allows minimization of any parameter whose ideal value is in 
+    the range:   0 < value (alpha,returns,etc)"""
+    
+    y =  -x.dot(constants)
+    
+    return y
+
+def obj_func_call(x0,constants,constraint,bounds,parameter_type):
+    
+    """calls the correct objective function for portfolio 
+    proportion optimiziation"""
+    
+    
+    if parameter_type == 'beta':
+      
+          res = minimize(obj_func_neg_inverse,x0=x0,args=(constants),
+                          constraints=constraint,
+                          bounds=bounds)
+            
+    else:
+        
+        res = minimize(obj_func_neg,x0=x0,args=(constants),
+                        constraints=constraint,
+                        bounds=bounds)
+    
+    
+    
+    return res
+            
+            
+        
+def prop_optimizer(params,parameter_type='beta'):
+    
+    """Handles the job of optimizing the proportions of the stocks in your
+    portfolio based on the parameter you've chosen."""
+    
+    
+    props = []
+    
+    for i in range(len(params['1'])):
+        
+        constants = []
+        
+        for key, value in params.items():
+            constant = np.array(value).reshape(1,len(value))[0][i]
+            constants.append(constant)
+            
+        constants = np.array(constants)
+        
+        con_sum = 1.0
+        constraint = LinearConstraint(np.ones(3), lb=1.0, ub=1.0)
+        bounds = [(0,1),(0,1),(0,1)]
+        
+        
+        x0 = np.array([0.1,0.7,0.2])
+        
+        res = obj_func_call(x0,constants,constraint,bounds,parameter_type)
+        
+        prop = list(res.x)
+        props.append(prop)
+
+
+    return np.array(props)
 
