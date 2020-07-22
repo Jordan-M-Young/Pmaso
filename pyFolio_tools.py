@@ -386,7 +386,9 @@ def obj_func_call(x0,constants,constraint,bounds,parameter_type):
 def prop_optimizer(params,parameter_type='beta'):
     
     """Handles the job of optimizing the proportions of the stocks in your
-    portfolio based on the parameter you've chosen."""
+    portfolio based on the parameter you've chosen. Accepts a portfolio dictionary
+    where keys = stock ticker and values = a numpy array of the parameter in question
+    (betas,sharpe ratios, etc)"""
     
     
     props = []
