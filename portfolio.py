@@ -103,6 +103,34 @@ class Portfolio():
         print('Error: Enter a frequency value ("Weekly","Monthly", or "Daily")' 
                + 'in method call or object initialization\n')
 
+    def param_check(self,params):
+        
+        """checks to see if a params argument has been passed to the 
+        parent function or was passed to the portfolio class during 
+        object initialization"""
+        
+        param_flag = True
+
+        if params == None and self.params == None:
+            param_flag = False
+            
+        elif params == None:
+            params = self.params
+        
+        else:
+            params = params
+        
+        return params, param_flag
+    
+    
+    def param_error_handler(self):
+        
+        """displays and error if a params argument was not passed to the parent
+        function"""
+        
+        print('Error: Enter a parameter dictionary in method call or' +
+              'during portfolio object initialization.')
+        
     def gen_sec_parameters(self,tickers=None,directory_path=None,start=None,
                            end=None,freq=None,treasury_data_path=None):
         
@@ -183,4 +211,21 @@ class Portfolio():
         self.portfolio_parms = portfolio_params
         
         return portfolio_params
-                
+    
+    def get_opt_prop(self,params=None,parameter_type='Beta'):
+        
+        """performs proportion optimization of your portfolio based on the
+        passed parameter type"""
+        
+        
+        params, param_flag = self.param_check(params)
+        
+        if param_flag:
+            props = pft.prop_optimizer(params, self.tickers, parameter_type)
+        
+        else:
+            self.param_error_handler()            
+            props = None
+            
+        
+        return props
