@@ -114,9 +114,6 @@ def get_betas(sec_returns,ind_returns):
     
 
     
-   
-     
-    
     cov = gen_covariance(sec_returns,ind_returns)
     var = gen_variance(ind_returns)
 
@@ -365,7 +362,7 @@ def obj_func_call(x0,constants,constraint,bounds,parameter_type):
     proportion optimiziation"""
     
     
-    if parameter_type == 'beta':
+    if parameter_type == 'Beta':
       
           res = minimize(obj_func_neg_inverse,x0=x0,args=(constants),
                           constraints=constraint,
@@ -383,26 +380,24 @@ def obj_func_call(x0,constants,constraint,bounds,parameter_type):
             
             
         
-def prop_optimizer(params,parameter_type='beta'):
+def prop_optimizer(params,tickers,parameter_type='Beta'):
     
     """Handles the job of optimizing the proportions of the stocks in your
-    portfolio based on the parameter you've chosen. Accepts a portfolio dictionary
-    where keys = stock ticker and values = a numpy array of the parameter in question
-    (betas,sharpe ratios, etc)"""
+    portfolio based on the parameter you've chosen."""
     
     
     props = []
-    
-    for i in range(len(params['1'])):
-        
+
+    for i in range(len(params[parameter_type][tickers[0]])):
+
         constants = []
-        
-        for key, value in params.items():
-            constant = np.array(value).reshape(1,len(value))[0][i]
+    
+        for key, value in params[parameter_type].items():
+            constant = value.reshape(1,len(value))[0][i]
             constants.append(constant)
-            
-        constants = np.array(constants)
         
+        constants = np.array(constants)
+            
         con_sum = 1.0
         constraint = LinearConstraint(np.ones(3), lb=1.0, ub=1.0)
         bounds = [(0,1),(0,1),(0,1)]
@@ -418,3 +413,56 @@ def prop_optimizer(params,parameter_type='beta'):
 
     return np.array(props)
 
+    
+    
+def gen_params_dic(tickers,data_dir,start,end,freq,treasury_data_path):
+    
+    betas = {}
+    alphas = {}
+    returns = {}
+    returns_stds = {}
+    sharpes = {}
+    
+    
+    params = {'Beta':betas,
+              'Alpha':alphas,
+              'Returns':returns,
+              'Returns_std':returns_stds,
+              'Sharpe_Ratio':sharpes}
+
+    
+    for ticker in tickers:
+        
+        data_path = data_dir + '/' + ticker + '.csv'
+        
+        data = format_data(data_path,start,end)
+        
+        dates = get_dates(data,start,end)
+        
+        market_returns = np.array(data.loc[dates[3]:end,:].iloc[:,2])
+       
+        risk_free = get_risk_free(dates,treasury_data_path,start,end,freq)
+        risk_free_len = len(risk_free)
+        risk_free = np.array(risk_free[risk_free_len-len(market_returns):])
+        
+        returns = np.array(data.iloc[:,3])
+        
+        beta = get_betas(returns,data.iloc[:,2])
+        
+        alpha = get_alphas(returns[3:],risk_free,market_returns,beta)
+        
+        returns_std = get_std(returns)
+        
+       
+        
+        sharpe = get_sharpe_ratios(returns[3:],risk_free,returns_std)
+
+        params['Beta'][ticker] = beta
+        params['Alpha'][ticker] = alpha
+        params['Returns'][ticker] = returns
+        params['Returns_std'][ticker] = returns_std
+        params['Sharpe_Ratio'][ticker] = sharpe
+
+
+
+    return params
