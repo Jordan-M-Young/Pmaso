@@ -8,8 +8,6 @@ import pyFolio_tools as pft
 
 class Portfolio():
     
-    """portfolio class object"""
-    
     def __init__(self,tickers,directory_path,start=None,end=None,treasury_data_path=None,freq=None):
         super().__init__()
         
@@ -20,84 +18,11 @@ class Portfolio():
         self.tickers = tickers
         self.freq = freq
         
-        for ticker in self.tickers:
-            ticker = ticker + '.csv'
-            self.ticker_paths.append(os.path.join(self.directory_path,ticker))
+        
         
         self.start = start
         self.end = end
         
-
-        
-
-    def gen_stock_betas(self,start=None,end=None):
-        
-        if self.start == None:
-            start = start
-        else:
-            start = self.start
-        
-        if self.end == None:
-            end = end
-        else:
-            end = self.end
-        
-        
-        self.betas = {}
-        for i in range(len(self.tickers)):
-            betas, data = pft.get_betas(self.ticker_paths[i],start,end)
-            self.betas[self.tickers[i]] = np.array(betas)
-        
-        return self.betas
-    
-    
-    def port_beta_math(self,proportions,start,end):
-        proportions, prop_type = pft.check_proportion_list(proportions)
-        betas = self.gen_stock_betas(start,end)
-        pb = []
-        
-        
-        if prop_type == 'list':
-            for counter, value in enumerate(betas):
-                if counter == 0:
-                    arr = betas[value]
-                    p = proportions[counter]
-                    val = arr * p
-                    port_betas = val
-                else:
-                    arr = betas[value]
-                    p = proportions[counter]
-                    val = arr * p
-                    
-                    port_betas += val
-            
-        elif prop_type == 'list/list':
-            for prop_set in proportions:
-                for counter, value in enumerate(betas):
-                    if counter == 0:
-                        arr = betas[value]
-                        p = prop_set[counter]
-                        val = arr * p
-                        port_betas = val
-                    else:
-                        arr = betas[value]
-                        p = prop_set[counter]
-                        val = arr * p
-                        
-                        port_betas += val
-                pb.append(port_betas)
-            
-            port_betas = pb[0]
-            port_betas = port_betas.reshape(517,1).T   
-            for i in range(len((proportions))-1):
-                port_betas = np.concatenate((port_betas,pb[i+1].reshape(517,1).T))
-        
-        else:
-            port_betas = None
-        
-        
-        return port_betas
-    
     def start_end_check(self,start,end):
         start_flag = True
         end_flag = True
@@ -169,41 +94,32 @@ class Portfolio():
     def freq_error_handler(self):
         print('Error: Enter a frequency value ("Weekly","Monthly", or "Daily")' 
                + 'in method call or object initialization\n')
-    
-    
-    def gen_portfolio_betas(self,proportions=None,start=None,end=None):
-        if proportions == None:
-            proportions = []
-            prop_el = float(1) / float(len(self.tickers))
-            for i in range(len(self.tickers)):
-                proportions.append(prop_el)
-        
-        start, end, start_flag, end_flag = self.start_end_check(start,end)
+
+    def gen_sec_parameters(self,tickers=None,directory_path=None,start=None,
+                           end=None,freq=None,treasury_data_path=None):
         
         
-        if start_flag and end_flag:
-            port_betas = self.port_beta_math(proportions,start,end)
-            
-        else:
-            self.start_end_error_handler(start_flag,end_flag)
-            port_betas = None
         
-        return port_betas
-        
-    def gen_risk_free(self,treasury_data_path=None,start=None,end=None,freq=None):
-        
-        
+        #Checks to see if the necessary inputs have been passed to the method
+        #or to the portfolio class on when intialized
         start, end, start_flag, end_flag = self.start_end_check(start,end)
         treasury_data_path, treasury_flag = self.treasury_check(treasury_data_path)
         freq, freq_flag = self.freq_check(freq)
         
+        #if all variables are there, a parameter dictionary is generated
         if start_flag and end_flag and treasury_flag and freq_flag:
             
-            dates = pft.get_dates(self.ticker_paths[0],start,end)
-            risk_free = pft.get_risk_free(dates,treasury_data_path,start,end,freq)
-
+            #generates parameter dictionay
+            self.params = pft.gen_params_dic(tickers,
+                                         directory_path,
+                                         start,
+                                         end,
+                                         freq,
+                                         treasury_data_path)
+        
+        #if not a None type object is returned and an error messgage is displayed
         else:
-            risk_free = None
+            self.params = None
             
             if start_flag == False or end_flag == False:
                 self.start_end_error_handler(start_flag,end_flag)
@@ -211,24 +127,52 @@ class Portfolio():
                 self.treasury_error_handler()
             if freq_flag == False:
                 self.freq_error_handler()
-            
         
         
         
         
         
-        return np.array(risk_free)
+        return self.params
+     
+     
+    def gen_portfolio_parameters(self,proportions,tickers=None,directory_path=None,start=None,
+                                  end=None,freq=None,treasury_data_path=None):
+        
+        params = self.gen_sec_parameters(tickers,
+                                        directory_path,
+                                        start,
+                                        end,
+                                        freq,
+                                        treasury_data_path)
+             
+        portfolio_params = {}
+        
+        proportions, prop_type = pft.check_proportion_list(proportions)
+        
+        if prop_type == 'list':
+            proportions = [proportions]
     
-    def gen_alphas(self,portfolio_returns,risk_free,market_returns,betas):
-        
-        R = portfolio_returns
-        Rf = risk_free
-        Beta = betas
-        Rm = market_returns
-        alpha = R - Rf - (Beta*(Rm-Rf))
         
         
         
+        for proportion in proportions:
+            prop_params = {}
+            
+            for key,value in params.items():
+                p_dic = list(enumerate(value))
+               
+                for i in range(len(p_dic)):
+                   if i == 0:
+                       param = proportion[i]*value[p_dic[i][1]]
+                   else:
+                       param = param + (proportion[i]*value[p_dic[i][1]])
+                
+                prop_params[key] = param
+                
+            portfolio_params[str(proportion)] = prop_params
+               
         
-        return alpha
+        self.portfolio_parms = portfolio_params
         
+        return portfolio_params
+                
