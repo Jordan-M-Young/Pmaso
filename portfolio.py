@@ -8,6 +8,8 @@ import pyFolio_tools as pft
 
 class Portfolio():
     
+    """Portfolio class object"""
+    
     def __init__(self,tickers,directory_path,start=None,end=None,treasury_data_path=None,freq=None):
         super().__init__()
         
@@ -24,6 +26,10 @@ class Portfolio():
         self.end = end
         
     def start_end_check(self,start,end):
+        """Makes sure that a start and end arg has been passed to the 
+        parent function this function is nested in or has been passed to the
+        class during initialization"""
+        
         start_flag = True
         end_flag = True
         
@@ -50,6 +56,8 @@ class Portfolio():
         return start, end, start_flag, end_flag
     
     def start_end_error_handler(self,start_flag,end_flag):
+        """Alerts user that an error has occurred regarding the
+        start and/or end arguments"""
         
         if start_flag == False and end_flag == True:
             print('Error: Enter a start date during method call or object initialization')
