@@ -7,6 +7,8 @@ from PyQt5 import QtWidgets as qtw
 import pyFolio_tools as pft
 
 class MainWindow(qtw.QMainWindow):
+    """Main Window of the pyFolio GUI"""
+    
     
     def __init__(self):
         super().__init__()
