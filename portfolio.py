@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-import pyFolio_tools as pft
+import portfolio_class_tools as pct
 
 
 
@@ -146,7 +146,7 @@ class Portfolio():
         if start_flag and end_flag and treasury_flag and freq_flag:
             
             #generates parameter dictionay
-            self.params = pft.gen_params_dic(tickers,
+            self.params = pct.gen_params_dic(tickers,
                                          directory_path,
                                          start,
                                          end,
@@ -183,7 +183,7 @@ class Portfolio():
              
         portfolio_params = {}
         
-        proportions, prop_type = pft.check_proportion_list(proportions)
+        proportions, prop_type = pct.check_proportion_list(proportions)
         
         if prop_type == 'list':
             proportions = [proportions]
@@ -221,7 +221,7 @@ class Portfolio():
         params, param_flag = self.param_check(params)
         
         if param_flag:
-            props = pft.prop_optimizer(params, self.tickers, parameter_type)
+            props = pct.prop_optimizer(params, self.tickers, parameter_type)
         
         else:
             self.param_error_handler()            
