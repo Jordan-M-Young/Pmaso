@@ -73,13 +73,16 @@ class MainWindow(qtw.QMainWindow):
         
         self.main_widget = qtw.QWidget()
         self.main_widget.setLayout(self.main_layout)
+        self.scrollArea = qtw.QScrollArea()
+        self.scrollArea.setWidget(self.main_widget)
+        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scrollArea.setWidgetResizable(True)
+
+
+
+            
         
-        
-        
-        
-        self.textedit = qtw.QTextEdit()
-        self.centralWidget = self.setCentralWidget(self.main_widget)
-        self.scrollArea = qtw.QScrollArea(self.centralWidget)
+        self.centralWidget = self.setCentralWidget(self.scrollArea)
         
         
         
