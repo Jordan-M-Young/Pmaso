@@ -22,7 +22,7 @@ def write_portfolio(portfolio,tickers,file_path):
         writer.writeheader()
         writer.writerow(port)
         
-def load_port(file_path):
+def load_portfolio(file_path):
     
     with open(file_path,newline='') as csvfile:
         reader = csv.DictReader(csvfile)
