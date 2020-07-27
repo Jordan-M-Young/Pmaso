@@ -183,7 +183,7 @@ class MainWindow(qtw.QMainWindow):
             widgetToRemove = self.main_layout.itemAt(i).widget()
             if widgetToRemove == b:
                 fname, _ = qtw.QFileDialog.getSaveFileName(self,'Save File')
-                pft.write_port(self.main_layout.itemAt(i+2).widget().toPlainText(), 
+                pft.write_portfolio(self.main_layout.itemAt(i+2).widget().toPlainText(), 
                                self.main_layout.itemAt(i+3).widget().toPlainText(), 
                                fname)
                 
@@ -192,7 +192,7 @@ class MainWindow(qtw.QMainWindow):
             widgetToRemove = self.main_layout.itemAt(i).widget()
             if widgetToRemove == b:
                 fname, _ = qtw.QFileDialog.getOpenFileName(self,'Save File')
-                portfolio, tickers = pft.load_port(fname)
+                portfolio, tickers = pft.load_portfolio(fname)
                 self.main_layout.itemAt(i+1).widget().setText(portfolio)
                 self.main_layout.itemAt(i+2).widget().setText(tickers)
                                
