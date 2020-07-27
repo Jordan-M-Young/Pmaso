@@ -214,7 +214,12 @@ class MainWindow(qtw.QMainWindow):
                     print(widgetToRemove.isChecked())
                     tickers = self.main_layout.itemAt(i-1).widget().toPlainText()
                     port_name= self.main_layout.itemAt(i-2).widget().toPlainText()
+                    portfolios.append([port_name,tickers])
+                    count =+ 1
                     
+                 
+        self.opt = Optimizer_Window(portfolios)
+        self.opt.show()
         
 if __name__ == '__main__':
     app = qtw.QApplication(sys.argv)
