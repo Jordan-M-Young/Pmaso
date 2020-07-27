@@ -13,7 +13,7 @@ class MainWindow(qtw.QMainWindow):
     def __init__(self):
         super().__init__()
         
-        self.setWindowTitle('PyFolio - Version 0.0.1')
+        self.setWindowTitle('PyFolio - Version 0.1.3')
         self.left = 100
         self.top = 100
         self.width = 640
