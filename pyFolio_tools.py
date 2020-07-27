@@ -1,8 +1,8 @@
 import csv
 
 def tick_parse(tickers):
-    t = tickers.find(',')
-    tt = tickers.rsplit(',',t+1)
+    num_commas = tickers.find(',')
+    tickers = tickers.rsplit(',',num_commas+1)
     
     return tt
 
