@@ -4,7 +4,7 @@ def tick_parse(tickers):
     num_commas = tickers.find(',')
     tickers = tickers.rsplit(',',num_commas+1)
     
-    return tt
+    return tickers
 
 
 def write_port(portfolio,tickers,file_path):
