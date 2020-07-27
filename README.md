@@ -12,4 +12,7 @@ of each security in your portfolio to see how the relevant parameters change
 pyFolio allows one to optimize held stock proportions(percentages) based on a given strategy, such as 
 maximizing returns or minimizing beta.
 
+Use the portfolio class and associated functions within your own scripts or analyze your portfolios using 
+the pyFolio app.
+
 
