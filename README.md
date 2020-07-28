@@ -1,4 +1,4 @@
-# pyFolio
+# Pmaso
 
 A collection of portfolio analysis tools. Generate custom investment portfolio class objects using
 data collected from Yahoo Finance. See https://github.com/Jordan-M-Young/YAHOO-FINANCE-DWNLD to automatically
