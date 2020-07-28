@@ -4,7 +4,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtWidgets as qtw
 
 
-import pyFolio_tools as pft
+import pmaso_tools as pft
 
 class MainWindow(qtw.QMainWindow):
     """Main Window of the pyFolio GUI"""
