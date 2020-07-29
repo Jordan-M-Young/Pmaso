@@ -48,7 +48,7 @@ def exponential_moving_avg(data,period=3,alpha=None):
             avg = []
             print(len(select))
             for j in range(len(select)):
-                k = 9 - j
+                k = len(data) - 1 - j
                 
                 pt = select[j]
                 Yt = alpha*((1-alpha)**k)
