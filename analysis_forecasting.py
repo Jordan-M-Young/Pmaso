@@ -46,9 +46,8 @@ def exponential_moving_avg(data,period=3,alpha=None):
         if i >= period-1:
             select = data[(i-period+1):(i+1)]
             avg = []
-            print(len(select))
             for j in range(len(select)):
-                k = len(data) - 1 - j
+                k = (period - 1) - j
                 
                 pt = select[j]
                 Yt = alpha*((1-alpha)**k)
