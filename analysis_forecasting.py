@@ -59,3 +59,17 @@ def exponential_moving_avg(data,period=3,alpha=None):
     ema = np.array(ema).reshape(len(ema),1)
     
     return ema, interval
+
+def gen_hist(arr,bins=5):
+    weights = np.ones_like(arr) / len(arr)
+    n, bins, patches = plt.hist(arr,bins=bins, density=True, weights=weights)
+    
+    return n, bins
+
+def gen_normal_dist(arr,mean,std):
+    normal = 1 / (std * math.sqrt(2*math.pi))
+    print(math.sqrt(2*math.pi) * std)
+    print(normal)
+    n_dist = normal * np.exp(-0.5*((arr-mean) / std )**2)
+    
+    return n_dis
