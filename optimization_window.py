@@ -1,38 +1,33 @@
 import sys
 from PyQt5 import QtCore as qtc
 from PyQt5 import QtWidgets as qtw
-from PyQt5 import QtGui as qtg
 from portfolio_class import Portfolio
 import pmaso_tools as pmt
 import numpy as np
-import custom_graph as cgr
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar 
+import pmaso_gui_widgets as pgw
+
 
 class External(qtc.QThread):
-    """
-    Runs a counter thread. That runs and updates progress bars
+    """Runs a counter thread. That runs and updates progress bars
     displayed during the optimization process
-    
     """
     
-    #counter signal
+    
     countChanged = qtc.pyqtSignal(int)
-    #processed finished signal
     finished = qtc.pyqtSignal(str)
-    #transmitted weight set signal
     weights = qtc.pyqtSignal(list)
     
-    
     def __init__(self, tickers, num_portfolios, bounds, parent=None):
-        
         """initializes the class, this thread requires that a tickers,
         num__portfolios and boudary conditions argument respectively be
         passed.
         """
         
         super().__init__()
-
-        #The required arguments
+        
+       
+        
         self.tickers = tickers
         self.data = None
         self.num_portfolios = num_portfolios
@@ -44,15 +39,14 @@ class External(qtc.QThread):
         updating a displayed progress bar in the window. I need to fix this function;
         too messy/cluttered and barely functional
         """
-        #generates a permutation set based on the passed args
+        
+        
         perms = pmt.get_perms(len(self.tickers),self.bounds)
         
         
         count = 0
-        #progress bar while loop; ends when count = 100 for 100% progress
         while count < 100:
             counter = self.num_portfolios
-            #step size is determined by 100 divided by the number of portfolios to be generated
             step = 100 / counter
             total = []
             
@@ -60,7 +54,7 @@ class External(qtc.QThread):
             p_list = list(perms)
             pnum = len(p_list)
 
-                     
+                                    
             for i in range(pnum):
                 if np.sum(np.array(list(p_list[i]))/100) == 1:
                     total.append(list(np.array(p_list[i])/100))
@@ -69,6 +63,8 @@ class External(qtc.QThread):
                     self.countChanged.emit(count)
                 if i == pnum - 1:
                     count = 100
+            
+        
         
         perms = None
         p_list = None
@@ -90,8 +86,8 @@ class Optimization_Window(qtw.QMainWindow):
     
     Window that allows the user to generate a space of portfolios based
     on passed tickers and weight set argument, allows for analysis (in the future)
-    and facilitates analysis reports"""
-    
+    and facilitates analysis reports
+    """    
     def __init__(self,portfolio_dic,dir_path=None):
         super().__init__()
         
@@ -114,12 +110,12 @@ class Optimization_Window(qtw.QMainWindow):
         
         
         
-        self.tabUI()
+       
       
     
         
         
-        
+        self.tabUI()
         menu = self.menuBar()
         menu.addMenu('File')
         
@@ -129,35 +125,26 @@ class Optimization_Window(qtw.QMainWindow):
     
     
     def combo_selected(self,text):
+        """Test function, can be deleted later"""
         print(text)
         
     
     def combo_boxUI(self,box_type='Freq'):
-        combo_box = qtg.QComboBox(self)
+        """Initializes a CustomComboBox class object and returns it to 
+        be added into a layout"""
         
-        
-        if box_type == 'Freq':
-            box_choices = ['Daily','Weekly','Monthly']
-        
-        elif box_type == 'MaxW':
-            #Choices are 50 - 100 in increments of 5
-            box_choices = [str(50 + (5*i)) for i in range(11)]
-        
-        elif box_type == 'MinW':
-            #Choices are 0 - 20 in increments of five
-            box_choices = [str(5*i) for i in range(5)]
-        else:
-            box_choices = ['100','500','1000','5000','10000','50000']
-            
-        for choice in box_choices:
-            combo_box.addItem(choice)
-        
+        combo_box = pgw.CustomComboBox(box_type)
         combo_box.activated[str].connect(self.combo_selected)
-        
+    
         return combo_box
         
     
     def tabUI(self,state='init'):
+        """Initializes the tab structure of the GUI
+        
+        Very messy function, definitley needs to be refactored"""
+        
+        
         self.tabdemo = qtw.QTabWidget()
         
         
@@ -172,12 +159,12 @@ class Optimization_Window(qtw.QMainWindow):
                 tick_box = qtw.QLineEdit()
                 tick_box.setText(value)
                 
-                tick_dir_box = qtw.QLineEdit()
+                tick_dir_box = qtw.QLineEdit('')
                 tick_dir_box.setObjectName('TickBox')
-                
                 set_dir_button = qtw.QPushButton('Set Directory')
                 set_dir_button.setObjectName(key)
                 set_dir_button.clicked.connect(lambda:self.set_directory(tick_dir_box))
+                
                 
                 num_port_combo_box = self.combo_boxUI('Num_Ports')
                 
@@ -288,6 +275,10 @@ class Optimization_Window(qtw.QMainWindow):
             
 
     def set_directory(self,box):
+        """Opens a file explorer window, prompts user to select the directory
+        from which the necessary ticker files are stored"""
+        
+        
         sending_button = self.sender()
         self.name = sending_button.objectName()
         dname = qtw.QFileDialog.getExistingDirectory(self,'Select a directory')
@@ -300,6 +291,7 @@ class Optimization_Window(qtw.QMainWindow):
         
         
     def clear_tab_layout(self):
+        """Clears all widgets and layouts from the current tab"""
         
         for i in reversed(range(self.rem_layout.count())):
             widgetToRemove = self.rem_layout.itemAt(i)
@@ -310,6 +302,9 @@ class Optimization_Window(qtw.QMainWindow):
                 wid.setParent(None)
         
     def onCountChanged(self, value):
+        """sets value of progress bar, connected to the countchanged
+        signal in the 'External' thread class object"""
+        
         self.progress.setValue(value)
         
         
@@ -369,20 +364,27 @@ class Optimization_Window(qtw.QMainWindow):
     
     
     def param_gen(self):
-        
-        
+        """Initializes a Portfolio class object for the current tab,
+        then portfolio class methods are called to generate portfolio
+        parameters
+        """
+        #Sets arguments to be passed to Portfolio class on initialization
         weights = self.weights
         dir_path = self.tab_dic[self.name]['Dir_box_text']
         freq = str(self.tab_dic[self.name]['Freq'].currentText())
         
+        #Initializes Portfolio class object
         portfolio = Portfolio(self.ticker_list,dir_path,freq)
+        
+        #Generates portfolio parameters
         sec_params = portfolio.gen_sec_parameters()
         opt_params = portfolio.get_opt_portfolios(sec_params,weights,tolerance=0.2)
         
+        #Adds portfolio data to the GUI data dictionary for later use
         self.data[self.name] = {'Params':sec_params,
                                 'Optimization_Params':opt_params}
         
-        
+        #returns the parameter dictionaries generated
         
         return sec_params, opt_params
         
@@ -398,7 +400,7 @@ class Optimization_Window(qtw.QMainWindow):
             self.progress.hide()
             self.clear_tab_layout()
             
-            tab1 = self.tab_dic[self.name]['Tab']
+            
             
             
             
@@ -407,29 +409,17 @@ class Optimization_Window(qtw.QMainWindow):
             self.data[self.name] ={'Securities':sec_params,
                                    'Optimization':opt_params}
             
-            n = len(opt_params['Portfolio_Space_Returns'])
-            m = len(opt_params['Frontier_Returns'])
-            # Set white background and black foreground
-            
-            
-            
-            pos2 = [{'pos': opt_params['Frontier Vals'][:, i]} for i in range(m)]
-            
-            
-            # plot data: x, y values
-            self.graphWidget = cgr.CustomCanvas(self.data[self.name]['Optimization'])
-            
-            
-            
-            
-            # Convert data array into a list of dictionaries with the x,y-coordinates
-            
-          
+           
+    
+        
+            self.graphWidget = pgw.CustomCanvas(opt_params)
             
             
             
             
             
+            
+            tab1 = self.tab_dic[self.name]['Tab']
             layout = self.resultsUI()
             self.tab_dic[self.name]['Layout'] = layout
             
@@ -438,30 +428,36 @@ class Optimization_Window(qtw.QMainWindow):
             self.tabdemo.setCurrentWidget(self.tabdemo.findChild(qtw.QWidget,self.name))
     
     def apply_plot_settings(self):
+        """This function handles redrawing the central figure widget when
+        new graph parameters are selected and applied from the GUI
+        """
         
+        
+        #Gets button name for finding relevant entries in f_e dictionary
         sending_button = self.sender()
         self.name = sending_button.objectName()
         
+        #Sets Figure Elements dictionary
         f_e = self.fig_els[self.name]
         
+        #Gets items to be graphed from Figure Elements dictionary
         self.graph_items = [key for key,val in f_e.items() if val == True]
-        data = self.data[self.name]['Optimization']
         
+        #Gets optimization paramters dictionary
+        opt_params = self.data[self.name]['Optimization']
         
+        #Generates graph Widget
+        self.graphWidget = pgw.CustomCanvas(opt_params,self.graph_items)
         
-        if 'All Portfolios' in self.graph_items:
-            print('cool')
-            
-        if 'Best Portfolios' in self.graph_items:
-            print('gotta fix this')
-
+        #Reconstructs the tab layout
         layout = self.resultsUI()
         self.tab_dic[self.name]['Layout'] = layout
         
-        
+        #sets fig_els values to False. Boxes must be checked again to replot
         for key in self.fig_els[self.name].keys():
             self.fig_els[self.name][key] = False
         
+        #Renders the GUI
         self.tabUI(state='change')
         self.tabdemo.setCurrentWidget(self.tabdemo.findChild(qtw.QWidget,self.name))
         
@@ -488,7 +484,7 @@ class Optimization_Window(qtw.QMainWindow):
         layout2 = qtw.QGridLayout()
         label = qtw.QLabel('Plot Items')
         label2 = qtw.QLabel('')
-        chk1 = qtw.QCheckBox('Best Portfolios')
+        chk1 = qtw.QCheckBox('Efficient Frontier')
         chk2 = qtw.QCheckBox('All Portfolios')
         chk1.toggled.connect(lambda:self.graph_box_checked(chk1))
         chk2.toggled.connect(lambda:self.graph_box_checked(chk2))
@@ -497,6 +493,7 @@ class Optimization_Window(qtw.QMainWindow):
         report_button.clicked.connect(self.gen_report)
         apply_button.setObjectName(self.name)
         apply_button.clicked.connect(self.apply_plot_settings)
+        
         graph_tools = NavigationToolbar(self.graphWidget,self)
         
         wid1 = qtw.QWidget()
@@ -505,9 +502,11 @@ class Optimization_Window(qtw.QMainWindow):
         layout1.addWidget(graph_tools)
         wid1.setLayout(layout1)
         
+        
         wid1a = qtw.QWidget()
         layout1a.addWidget(wid1)
         wid1a.setLayout(layout1a)
+        
         
         wid2 = qtw.QWidget()
         layout2.addWidget(label,0,0,1,1)
@@ -517,6 +516,13 @@ class Optimization_Window(qtw.QMainWindow):
         layout2.addWidget(report_button,3,2,1,1)
         layout2.addWidget(apply_button,2,2,1,1)
         wid2.setLayout(layout2)
+        
+        
+        
+        
+        
+        
+        
         
         layout = qtw.QVBoxLayout()
         layout.addWidget(wid1a)
@@ -543,5 +549,5 @@ if __name__ == '__main__':
     to run the optimization process"""
     pd = {'Hello':'AIG,BA,CVX','22':'CVX,IBM'}
     app = qtw.QApplication(sys.argv)
-    mw = Results_Window(pd,'E:/')
+    mw = Results_Window(pd,'C:/')
     sys.exit(app.exec())
