@@ -3,7 +3,7 @@ import PyQt5
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets as qtw
 
-from results_window import Results_Window
+from optimization_window import Optimization_Window
 import portfolio_class_tools as pct
 
 class MainWindow(qtw.QMainWindow):
@@ -227,7 +227,7 @@ class MainWindow(qtw.QMainWindow):
                     
                     
                     
-        self.res = Results_Window(portfolios,
+        self.res = Optimization_Window(portfolios,
                                     self.directory_path
                                     )
         
