@@ -73,9 +73,10 @@ class External(qtc.QThread):
         
         
     def stop(self):
-       """Ends Thread?
+       """Ends Thread
        """
        self.wait()
+       self.quit()
        
        
       
