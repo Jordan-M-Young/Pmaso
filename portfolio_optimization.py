@@ -42,17 +42,33 @@ def gen_weights(num_assets,num_portfolios,bounds):
     x = range(low_bound,up_bound)
     perms = itertools.product(x,repeat=num_assets)
     
-    count = num_portfolios
-
+    counter = num_portfolios
     
-    for perm in perms:
-        if np.sum(np.array(list(perm))/100) == 1:
-            total.append(list(np.array(perm)/100))
-            count = count - 1
-            print(count)
+    
+    
+    try:
         
-        if count == 0:
-            break
+        global count
+        print(count)
+        step = 100 / counter
+        
+        for perm in perms:
+            if np.sum(np.array(list(perm))/100) == 1:
+                total.append(list(np.array(perm)/100))
+                counter = counter - 1
+                count = count + step
+                print(count)
+            if counter == 0:
+                break
+            
+    except NameError:
+        
+        for perm in perms:
+            if np.sum(np.array(list(perm))/100) == 1:
+                total.append(list(np.array(perm)/100))
+                counter = counter - 1
+            if counter == 0:
+                break
         
     
     
@@ -123,10 +139,13 @@ def gen_eff_frontier(port_exp_rets,port_stds,num_points):
         frontier_stds.append(max_std)
         frontier_rets.append(max_ret)
         
+    frontier_rets.sort()
+    frontier_stds.sort()
+        
     return frontier_rets, frontier_stds
 
 def gen_portfolio_space(weights,exp_rets,ann_rets,vnces,
-                     tickers,stds,rf_asset_return=None,plot=None):
+                     tickers,stds,rf_asset_return=None):
     
     port_stds = []
     port_exp_rets = []
@@ -138,8 +157,8 @@ def gen_portfolio_space(weights,exp_rets,ann_rets,vnces,
         for i in range(len(tickers)):
             for j in range(len(tickers)):
                 if j > i:
-                    corr = cov(ann_rets[i],ann_rets[j])
-                    term = 2*weights[k][i] * weights[k][j] * corr * stds[i] * stds[j]
+                    covar = cov(ann_rets[i],ann_rets[j])
+                    term = 2*weights[k][i] * weights[k][j] * covar * stds[i] * stds[j]
                     term2.append(term)
                     
         term2 = np.sum(term2)
@@ -148,13 +167,8 @@ def gen_portfolio_space(weights,exp_rets,ann_rets,vnces,
         
         port_std = math.sqrt(port_var)
         port_exp_ret = exp_rets.dot(np.array(weights[k]))
-        port_stds.append(port_std)
-        port_exp_rets.append(port_exp_ret)
-
-
-    if plot:
-        plt.scatter(np.array(port_stds)*100,np.array(port_exp_rets)*100)
-        
+        port_stds.append(round(port_std,10)*100)
+        port_exp_rets.append(round(port_exp_ret,10)*100)        
 
         
         
@@ -165,155 +179,69 @@ def gen_portfolio_space(weights,exp_rets,ann_rets,vnces,
     return port_exp_rets, port_stds
 
 
-def gen_CAL(port_exp_ret,port_std,Rf_rate,plot=None):
+def gen_CAL(port_exp_ret,port_std,Rf_rate):
     weights = [[1.0,0.0],[0.5,0.5],[0.0,1.0],[-0.5,1.5]]
     cal_rets = []
     cal_stds = []
     for weight in weights:
-        cal_ret = weight[0]*Rf_rate + weight[1]*port_exp_ret*100
-        cal_std = weight[1]*port_std*100
+        cal_ret = weight[0]*Rf_rate + weight[1]*port_exp_ret
+        cal_std = weight[1]*port_std
         cal_rets.append(cal_ret)
         cal_stds.append(cal_std)
+   
+    sharpe_ratio = (cal_rets[2] - cal_rets[0]) / (cal_stds[2] - cal_stds[0] ) 
     
-    
-    sharpe_ratio = (cal_rets[1] - cal_rets[0]) / (cal_stds[1] - cal_stds[0] ) 
-
-    
-    if plot:
-        plt.plot(np.array(cal_stds),np.array(cal_rets))
         
         
     return cal_rets, cal_stds, sharpe_ratio
            
-
-
-def gen_frontier_slope(frontier_ret,coefs,poly_order):
-    
-    if poly_order == 3:
-        slope = 3*coefs[0]*(frontier_ret**2) + 2*coefs[1]*frontier_ret + coefs[2]
-    elif poly_order == 4:
-        slope = 4*coefs[0]*(frontier_ret**3) + 3*coefs[1]*(frontier_ret**2) 
-        + 2*coefs[2]*frontier_ret + coefs[3]
-        
-    else:
-        slope = 2*coefs[0]*(frontier_ret) + coefs[1]
-    
-    return slope
     
     
-def gen_sharp_ratios(frontier_rets,frontier_stds,Rf_rate,p_order=3):
-    coefs = np.polyfit(frontier_rets,frontier_stds,p_order)
+def gen_sharp_ratios(frontier_rets,frontier_stds,Rf_rate):
+    
 
     inverse_sharpes = []
     frontier_slopes = []
     sharpe_ratios = []
     for i in range(len(frontier_rets)):
-        yprime = gen_frontier_slope(frontier_rets[i],coefs,poly_order=p_order)
-        frontier_slopes.append(yprime)
         cal_rets, cal_stds, sharpe_ratio = gen_CAL(frontier_rets[i],frontier_stds[i],Rf_rate)
-        inverse_sharpes.append(1/sharpe_ratio)
         sharpe_ratios.append(sharpe_ratio)
+    
     
     return sharpe_ratios, inverse_sharpes, frontier_slopes
 
 
-def slope_comparison(inverse_sharpes,frontier_slopes,tolerance):
-    inds = []
-    slope_ration = np.array(inverse_sharpes) / np.array(frontier_slopes)
-    for i in range(len(slope_ration)):
-        if slope_ration[i] > tolerance:
-            inds.append(i)
-            
-    return inds
+def gen_betas(asset_betas,weights):
+    asset_betas = np.array(asset_betas)
+    port_betas = []
+    for i in range(len(weights)):
+        weight = np.array(weights[i])
+        beta = np.dot(asset_betas,weight)
+        port_betas.append(beta)
 
-def find_best_weights(inds,frontier_rets,frontier_stds,sharpe_ratios,
-                      port_exp_rets,port_stds,weights):
+
+    return port_betas
+
+
+def gen_alphas(port_exp_rets,port_betas,Rf_rate,mkt_ret):
     
-    best_rets = []
-    best_stds = []
-    best_sharpe_ratios = []
-    for i in inds:
-        best_rets.append(frontier_rets[i])
-        best_stds.append(frontier_stds[i])
-        best_sharpe_ratios.append(sharpe_ratios[i])
+    alphas = []
+    for i in range(len(port_exp_rets)):
         
-    best_weights_indices = []
-    for i in range(len(best_rets)):
+        print(mkt_ret)
         
-        ret_index = port_exp_rets.index(best_rets[i]/100)
-        std_index = port_stds.index(best_stds[i]/100)
-        
-        if ret_index == std_index:
-            best_weights_indices.append(ret_index)
-        
-        
+        alpha = port_exp_rets[i] - (Rf_rate + (port_betas[i]*(mkt_ret-Rf_rate)))
+        alphas.append(alpha)
     
-    best_weights = []
-    for ind in best_weights_indices:
-        best_weights.append(weights[ind])
+    return alphas
 
-    
-    return best_weights, best_rets, best_stds, best_sharpe_ratios
-
-
-def get_portfolio_dic(best_rets,best_stds,best_sharpe_ratios,best_weights):
-    
-    
-    best_portfolios = {}
-    for i in range(len(best_weights)):
-        port_results = {}
-        port_results['Expected_Returns'] = best_rets[i]
-        port_results['Standard_Deviation'] = best_stds[i]
-        port_results['Sharpe_Ratio'] = best_sharpe_ratios[i]
-        port_results['Weights'] = best_weights[i]
-        
-        best_portfolios[str(i)] = port_results
-    
-    return best_portfolios
-
-
-def get_best_portfolios(weights,port_exp_rets,port_stds,frontier_rets,
-                        frontier_stds,tolerance,Rf_rate):
-    
-    
-    
-    sharpe_ratios, s_ratios, frontier_slopes = gen_sharp_ratios(frontier_rets, 
-                                                                frontier_stds, 
-                                                                Rf_rate,
-                                                                p_order=3)
-    
-
-
-    inds = slope_comparison(s_ratios, frontier_slopes,tolerance)
-            
-    
-    
-    best_params = find_best_weights(inds, 
-                                    frontier_rets, 
-                                    frontier_stds, 
-                                    sharpe_ratios, 
-                                    port_exp_rets, 
-                                    port_stds, 
-                                    weights)
-    
-    
-    best_weights, best_rets, best_stds, best_sharpe_ratios = best_params
-    
-    
-    best_portfolios = get_portfolio_dic(best_rets, 
-                                        best_stds, 
-                                        best_sharpe_ratios, 
-                                        best_weights)
-    
-    return best_portfolios
-
-
-def optimize_portfolio_weights(params,tickers,weights,Rf_rate,tolerance=0.3):
+def optimize_portfolio_weights(params,tickers,weights,Rf_rate,tolerance=0.2):
     
     optimization_params = {'Asset_Expected_Returns':{},
                            'Asset_Std':{},
-                           'Asset_Variance':{}}
-    
+                           'Asset_Variance':{},
+                           'Asset_Covariance':{},
+                           'Asset_Beta':{}}
     
     
     
@@ -321,11 +249,14 @@ def optimize_portfolio_weights(params,tickers,weights,Rf_rate,tolerance=0.3):
     exp_rets = []
     stds = []
     vnces = []
-    
+    mkt_ret = np.mean(params['Annualized_Market_Returns'])*100
+    ann_mkt_rets = params['Annualized_Market_Returns']
+    mkt_var = params['Annualized_Market_Returns_std']**2
+    asset_betas = []
     for ticker in tickers:
         
         ann_ret = params['Annualized_Returns'][ticker]
-        # print(ann_ret)
+        
         ann_rets.append(ann_ret)
         exp_ret = np.mean(ann_ret)
         ann_std = np.std(ann_ret)
@@ -333,15 +264,21 @@ def optimize_portfolio_weights(params,tickers,weights,Rf_rate,tolerance=0.3):
         exp_rets.append(exp_ret)
         stds.append(ann_std)
         vnces.append(var)
+        covariance = cov(ann_ret,ann_mkt_rets)
+        Beta = covariance / mkt_var
+        asset_betas.append(Beta)
+        
         optimization_params['Asset_Expected_Returns'][ticker] = exp_ret*100
         optimization_params['Asset_Std'][ticker] = ann_std*100
-        optimization_params['Asset_Variance'][ticker] = var*100
-    
-    
+        optimization_params['Asset_Variance'][ticker] = var
+        optimization_params['Asset_Covariance'][ticker] = covariance
+        optimization_params['Asset_Beta'][ticker] = Beta
+        
+        
+        
     exp_rets = np.array(exp_rets)
     stds = np.array(stds)
     vnces = np.array(vnces)
-    
     
     
     
@@ -357,34 +294,37 @@ def optimize_portfolio_weights(params,tickers,weights,Rf_rate,tolerance=0.3):
     
     
     
+    num_points = 50
     
-    frontier_rets, frontier_stds = gen_eff_frontier(port_exp_rets,port_stds,200)
-    frontier_rets = np.array(frontier_rets)*100
-    frontier_stds = np.array(frontier_stds)*100
-    
+    frontier_rets, frontier_stds = gen_eff_frontier(port_exp_rets,port_stds,num_points)
     
     
-    
-    best_portfolios = get_best_portfolios(weights, 
-                                          port_exp_rets, 
-                                          port_stds, 
-                                          frontier_rets, 
-                                          frontier_stds,
-                                          tolerance,
-                                          Rf_rate)
+    frontier_rets = np.array(frontier_rets)
+    frontier_stds = np.array(frontier_stds)
     
     
     
-
-    optimization_params['Best_Portfolios'] = best_portfolios
+    
+    sharpe_ratios, s, slopes = gen_sharp_ratios(port_exp_rets,
+                                                        port_stds,
+                                                        Rf_rate,
+                                                        )
+   
+    port_betas = gen_betas(asset_betas,weights)
+    port_alphas = gen_alphas(port_exp_rets,port_betas,Rf_rate,mkt_ret)
+    
+    
+    
     optimization_params['Frontier_Returns'] = frontier_rets
     optimization_params['Frontier_Stds'] = frontier_stds
+    optimization_params['Frontier_Vals'] = np.array([list(frontier_stds),list(frontier_rets)])
     optimization_params['Portfolio_Space_Returns'] = port_exp_rets
     optimization_params['Portfolio_Space_Stds'] = port_stds
+    optimization_params['Portfolio_Sharpe_Ratios'] = sharpe_ratios
+    optimization_params['Portfolio_Space'] = np.array([port_stds,port_exp_rets])
     optimization_params['Weights'] = weights
-    
+    optimization_params['Betas'] = port_betas
+    optimization_params['Alphas'] = port_alphas
     
     
     return optimization_params
-    
-    
