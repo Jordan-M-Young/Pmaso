@@ -191,6 +191,50 @@ class CustomCanvas(CustomPlot,FigureCanvas):
 
         FigureCanvas.__init__(self, self.fig)
         self.CustomPlot = CustomPlot(self.fig,self.ax1,self.pts)
+        
+class TableModel(qtc.QAbstractTableModel):
+    def __init__(self,dat=None,tickers=None):
+        super().__init__()
+        if dat == None:
+            self._data = [[None,None,None,None,None],
+                          [None,None,None,None,None],
+                          [None,None,None,None,None]]
+        else:
+            self._data = dat
+            
+        self._headers =['Standard Deviation','Returns','Sharpe Ratio',
+                        'Alpha','Beta']    
+        if tickers:
+            for i in reversed(range(len(tickers))):
+                self._headers.insert(6,tickers[i])
+      
+        
+    def rowCount(self,parent):
+        return len(self._data)
+    
+    def columnCount(self,parent):
+        return len(self._headers)
+    
+    def data(self,index,role):
+        if role == qtc.Qt.DisplayRole:
+            return self._data[index.row()][index.column()]
+    
+    def headerData(self,section,orientation,role):
+        
+        if (
+            orientation == qtc.Qt.Horizontal and
+            role == qtc.Qt.DisplayRole
+            ):
+            return self._headers[section]
+        else:
+            return super().headerData(section, orientation, role)
+    
+    def sort(self, column, order):
+        self.layoutAboutToBeChanged.emit()
+        self._data.sort(key=lambda x: x[column])
+        if order == qtc.Qt.DescendingOrder:
+            self._data.reverse()
+        self.layoutChanged.emit()
             
             
             
