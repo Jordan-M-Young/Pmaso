@@ -1,28 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jun 20 11:52:48 2020
-
-@author: jmyou
-"""
-
-
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import math
-from scipy.optimize import minimize, LinearConstraint
-import random as rand
-import analysis_forecasting as af 
-import sys
-from operator import mul
-from functools import reduce
-import itertools
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.pipeline import make_pipeline
-from sklearn.linear_model import LinearRegression
-import portfolio_optimization as pop 
-
-
 
 
 def format_data(file):
@@ -49,12 +26,6 @@ def get_annual_dates(data,ann_ret):
     
     return annual_dates
 
-
-
-
-
-
-    
 
 
 def get_annualized_returns(data,freq,target='Asset'):   
@@ -94,11 +65,6 @@ def get_dates(data):
     return dates
 
 
-
-            
-        
-
-
     
 def gen_params_dic(tickers,data_dir,freq,obj='Asset'):
     
@@ -123,7 +89,6 @@ def gen_params_dic(tickers,data_dir,freq,obj='Asset'):
         
         dates = get_dates(data)
         returns = np.array(data.iloc[:,3])
-        print(len(returns))
         
             
 
@@ -132,12 +97,14 @@ def gen_params_dic(tickers,data_dir,freq,obj='Asset'):
         params['Data'][ticker] = data
         params[freq +'_Dates'][ticker] = dates
         params['Annualized_Dates'] = ann_dates
+        params[freq + '_Returns_std'][ticker] = np.std(ann_ret)
         
     ann_mkt_ret = get_annualized_returns(data, freq, target='Market')
     ann_mkt_ret_std = np.std(ann_mkt_ret)
 
     params['Annualized_Market_Returns'] = ann_mkt_ret
     params['Annualized_Market_Returns_std'] = np.std(ann_mkt_ret)
+    params['Annualized_Market_Returns_Variance '] = np.std(ann_mkt_ret)**2
     params['Annualized_Periodic_Market_Returns_std'] = ann_mkt_ret_std
     
     
