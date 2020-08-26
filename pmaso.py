@@ -7,16 +7,21 @@ from optimization_window import Optimization_Window
 import portfolio_class_tools as pct
 
 class MainWindow(qtw.QMainWindow):
+    """Opening window of pmaso software portfolio names and tickers
+    are entered here and then are passed to an optimizer window"""
     
     def __init__(self):
         super().__init__()
         
+        #Window settings
         self.setWindowTitle('PyFolio - Version 0.0.1')
         self.left = 100
         self.top = 100
         self.width = 640
         self.height = 480
         self.setGeometry(self.left,self.top,self.width,self.height)
+        
+        #Window data
         self.portfolio_flags = []
         self.portfolios = {}
         self.portfolio_rows = 1
@@ -116,6 +121,8 @@ class MainWindow(qtw.QMainWindow):
         
 
     def remove_element(self,i):
+        """Removes an element from the GUI layout"""
+        
         widgetToRemove = self.main_layout.itemAt(i).widget()
         if str(type(widgetToRemove)) != "<class 'NoneType'>":
             self.main_layout.removeWidget(widgetToRemove)
@@ -123,25 +130,23 @@ class MainWindow(qtw.QMainWindow):
         
         
     def add_portfolio_row(self):
+        """Adds a new row of widgets for entering a new portfolio"""
         
+        #Deletes elements in the way of new row
         for i in reversed(range(self.main_layout.count())):
             if  i == (3 + 5*self.portfolio_rows) or i == (2 + 5*self.portfolio_rows):
                 self.remove_element(i)
                 
            
-                    
         self.portfolio_rows += 1
-     
+        
         for i in reversed(range(self.main_layout.count())):
             widgetToRemove = self.main_layout.itemAt(i).widget()
            
-        
-        
-
-        print(list(range(self.main_layout.count())))
+       
                     
                     
-    
+        #Adds new widgets
         new_save_button = qtw.QPushButton('Save')
         new_save_button.clicked.connect(lambda:self.click_save_button(new_save_button))
         new_load_button = qtw.QPushButton('Load')
@@ -157,7 +162,6 @@ class MainWindow(qtw.QMainWindow):
         
         
         
-        print(list(range(self.main_layout.count())))
         
         
         
@@ -166,6 +170,8 @@ class MainWindow(qtw.QMainWindow):
         
         
     def remove_portfolio_row(self):
+        """Removes a row of widgets if you want to drop a portfolio entry"""
+        
         if self.portfolio_rows != 1:
             for i in reversed(range(self.main_layout.count())):
                 if i >  5*self.portfolio_rows - 4:
@@ -189,10 +195,14 @@ class MainWindow(qtw.QMainWindow):
     
     
     def set_file_directory(self):
+        """Sets file directory"""
+        
         dname = qtw.QFileDialog.getExistingDirectory(self,'Select a directory')
         self.directory_path = dname
     
     def click_save_button(self,b):
+        """Saves portfolio settings to a text file"""
+        
         for i in (range(self.main_layout.count())):
             widgetToRemove = self.main_layout.itemAt(i).widget()
             if widgetToRemove == b:
@@ -202,6 +212,8 @@ class MainWindow(qtw.QMainWindow):
                                fname)
                 
     def click_load_button(self,b):
+        """Loads portfolio settings text file"""
+        
         for i in (range(self.main_layout.count())):
             widgetToRemove = self.main_layout.itemAt(i).widget()
             if widgetToRemove == b:
@@ -213,6 +225,9 @@ class MainWindow(qtw.QMainWindow):
                 
             
     def collect_portfolios(self):
+        """Gathers all the portfolio entries and passes them to an instance
+        of the Optimization_Window class"""
+        
         portfolios = {}
         for i in (range(self.main_layout.count())):
             widgetToRemove = self.main_layout.itemAt(i).widget()
