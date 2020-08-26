@@ -285,12 +285,13 @@ def optimize_portfolio_weights(params,tickers,weights,rf_rate,tolerance=0.2):
                                                    ann_rets,
                                                    vnces,
                                                    tickers,
-                                                   stds,
-                                                   rf_rate
-                                                   )
+                                                   stds
+                                                  )
+                                                   
     
     
     
+ 
     num_points = 50
     
     frontier_rets, frontier_stds = gen_eff_frontier(port_exp_rets,port_stds,num_points)
