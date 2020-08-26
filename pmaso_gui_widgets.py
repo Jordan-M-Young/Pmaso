@@ -5,19 +5,13 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
 from PyQt5 import QtCore as qtc
 from PyQt5 import QtWidgets as qtw
-from PyQt5 import QtGui as qtg
 
 
 
 class CustomComboBox(qtw.QComboBox):
-    """Custom ComboBox widget class
     
-    Initializes a custom combobox widget for the GUI,
-    takes one box_type (string) argument
-    """
     def __init__(self,box_type='Freq'):
         qtw.QComboBox.__init__(self)
-        
         
         self.box_type = box_type
         
@@ -25,26 +19,26 @@ class CustomComboBox(qtw.QComboBox):
         
         for choice in self.box_choices:
             self.addItem(choice)
-        
-        
-        
-        
-    def get_box_choices(self):  
-     
-          if self.box_type == 'Freq':
-              self.box_choices = ['Daily','Weekly','Monthly']
-
-          elif self.box_type == 'MaxW':
-              #Choices are 50 - 100 in increments of 5
-              self.box_choices = [str(50 + (5*i)) for i in range(11)]
-
-          elif self.box_type == 'MinW':
-              #Choices are 0 - 20 in increments of five
-              self.box_choices = [str(5*i) for i in range(5)]
-          else:
-              self.box_choices = ['100','500','1000','5000','10000','50000']
-               
             
+    
+    def get_box_choices(self):
+            
+        if self.box_type == 'Freq':
+            self.box_choices = ['Daily','Weekly','Monthly']
+        
+        elif self.box_type == 'MaxW':
+            #Choices are 50 - 100 in increments of 5
+            self.box_choices = [str(50 + (5*i)) for i in range(11)]
+        
+        elif self.box_type == 'MinW':
+            #Choices are 0 - 20 in increments of five
+            self.box_choices = [str(5*i) for i in range(5)]
+        else:
+            self.box_choices = ['100','500','1000','5000','10000','50000']
+            
+        
+    
+
 class SelectFromCollection(object):
     """Select indices from a matplotlib collection using `LassoSelector`.
 
@@ -70,8 +64,6 @@ class SelectFromCollection(object):
     """
 
     def __init__(self, ax, collection, alpha_other=0.3):
-        """Initializes the class"""
-        
         self.canvas = ax.figure.canvas
         self.collection = collection
         self.alpha_other = alpha_other
@@ -99,7 +91,6 @@ class SelectFromCollection(object):
         self.fc[self.ind, -1] = 1
         self.collection.set_facecolors(self.fc)
         self.canvas.draw_idle()
-        print('yep')
 
     
     def onPress(self,event):
@@ -113,26 +104,17 @@ class SelectFromCollection(object):
 
 
 class CustomPlot():
-    """Custom matplotlib figure
-    
-    This class is a standard matplotlib figure that has 
-    added lasso tool functionality"""
     
     def __init__(self,fig,ax,pts):
-    """Initializes the class"""
-    
-        #CustomPlot attributes
+        
+        
         self.fig = fig
         self.ax = ax
         self.pts = pts
         
-        #Lasso line properties
         self.lineprops = {'color': 'red', 'linewidth': 4, 'alpha': 0.8}
-        
-        #Lasso object
         self.lsso = SelectFromCollection(self.ax, self.pts)
         
-        #Calls lasso class functions during mouse button events
         self.fig.canvas.mpl_connect('button_press_event', self.lsso.onPress)
         self.fig.canvas.mpl_connect('button_release_event', self.lsso.onRelease)
         
@@ -146,51 +128,56 @@ class CustomPlot():
 
 
 
-
-
-
-
-
-
 class CustomCanvas(CustomPlot,FigureCanvas):
 
     def __init__(self,opt_params,p_items=['All Portfolios']):
         
         
-        self.fig = Figure(figsize=(5,5), dpi=100)
+        self.fig = Figure(figsize=(7,6), dpi=100)
         self.ax1 = self.fig.add_subplot(111)
         
         
         self.opt_params = opt_params    
         
         
+        #These two lines are why actual best values are not plotting!!!!
         
-        p_s = self.opt_params['Portfolio_Space'].T
+        p_r = np.array(self.opt_params['Portfolio_Space_Stds'])
+        p_s = np.array(self.opt_params['Portfolio_Space_Returns'])
+        
+        
+        
+        
+        
         e_f = self.opt_params['Frontier_Vals'].T
         
         
         if p_items:
             if 'All Portfolios' in p_items and 'Efficient Frontier' in p_items:
-                self.pts = self.ax1.scatter(p_s[:,0],p_s[:,1])
+                self.pts = self.ax1.scatter(p_r,p_s)
                 self.ax1.plot(e_f[:,0],e_f[:,1],color='r')
             
             elif 'All Portfolios' in p_items:
-                self.pts = self.ax1.scatter(p_s[:,0],p_s[:,1])
+                self.pts = self.ax1.scatter(p_r,p_s)
             elif 'Efficient Frontier' in p_items:
                 self.ax1.plot(e_f[:,0],e_f[:,1],color='r')
                 self.pts = self.ax1.scatter(np.min(e_f[:,0]),np.min(e_f[:,1]),color='w')
             else:
                 self.pts = self.ax1.scatter(np.array([0]),np.array([0]),color='w')
+        else:
+            self.pts = self.ax1.scatter(np.array([0]),np.array([0]),color='w')
         
         
         # ax1 settings
-        self.ax1.set_xlabel('time')
-        self.ax1.set_ylabel('raw data')
+        self.ax1.set_xlabel('Expected Returns (%)')
+        self.ax1.set_ylabel('Standard Deviation')
      
         
 
         FigureCanvas.__init__(self, self.fig)
         self.CustomPlot = CustomPlot(self.fig,self.ax1,self.pts)
+        
+        
         
 class TableModel(qtc.QAbstractTableModel):
     def __init__(self,dat=None,tickers=None):
@@ -202,7 +189,7 @@ class TableModel(qtc.QAbstractTableModel):
         else:
             self._data = dat
             
-        self._headers =['Standard Deviation','Returns','Sharpe Ratio',
+        self._headers =['Std Deviation','Returns','Sharpe Ratio',
                         'Alpha','Beta']    
         if tickers:
             for i in reversed(range(len(tickers))):
