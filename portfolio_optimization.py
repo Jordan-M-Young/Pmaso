@@ -1,6 +1,5 @@
 import itertools
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 import random as rand
 
@@ -49,7 +48,6 @@ def gen_weights(num_assets,num_portfolios,bounds):
     try:
         
         global count
-        print(count)
         step = 100 / counter
         
         for perm in perms:
@@ -145,7 +143,7 @@ def gen_eff_frontier(port_exp_rets,port_stds,num_points):
     return frontier_rets, frontier_stds
 
 def gen_portfolio_space(weights,exp_rets,ann_rets,vnces,
-                     tickers,stds,rf_asset_return=None):
+                     tickers,stds):
     
     port_stds = []
     port_exp_rets = []
@@ -179,12 +177,12 @@ def gen_portfolio_space(weights,exp_rets,ann_rets,vnces,
     return port_exp_rets, port_stds
 
 
-def gen_CAL(port_exp_ret,port_std,Rf_rate):
+def gen_CAL(port_exp_ret,port_std,rf_rate):
     weights = [[1.0,0.0],[0.5,0.5],[0.0,1.0],[-0.5,1.5]]
     cal_rets = []
     cal_stds = []
     for weight in weights:
-        cal_ret = weight[0]*Rf_rate + weight[1]*port_exp_ret
+        cal_ret = weight[0]*rf_rate + weight[1]*port_exp_ret
         cal_std = weight[1]*port_std
         cal_rets.append(cal_ret)
         cal_stds.append(cal_std)
@@ -197,14 +195,14 @@ def gen_CAL(port_exp_ret,port_std,Rf_rate):
            
     
     
-def gen_sharp_ratios(frontier_rets,frontier_stds,Rf_rate):
+def gen_sharp_ratios(frontier_rets,frontier_stds,rf_rate):
     
 
     inverse_sharpes = []
     frontier_slopes = []
     sharpe_ratios = []
     for i in range(len(frontier_rets)):
-        cal_rets, cal_stds, sharpe_ratio = gen_CAL(frontier_rets[i],frontier_stds[i],Rf_rate)
+        cal_rets, cal_stds, sharpe_ratio = gen_CAL(frontier_rets[i],frontier_stds[i],rf_rate)
         sharpe_ratios.append(sharpe_ratio)
     
     
@@ -228,14 +226,13 @@ def gen_alphas(port_exp_rets,port_betas,Rf_rate,mkt_ret):
     alphas = []
     for i in range(len(port_exp_rets)):
         
-        print(mkt_ret)
         
         alpha = port_exp_rets[i] - (Rf_rate + (port_betas[i]*(mkt_ret-Rf_rate)))
         alphas.append(alpha)
     
     return alphas
 
-def optimize_portfolio_weights(params,tickers,weights,Rf_rate,tolerance=0.2):
+def optimize_portfolio_weights(params,tickers,weights,rf_rate,tolerance=0.2):
     
     optimization_params = {'Asset_Expected_Returns':{},
                            'Asset_Std':{},
@@ -289,7 +286,7 @@ def optimize_portfolio_weights(params,tickers,weights,Rf_rate,tolerance=0.2):
                                                    vnces,
                                                    tickers,
                                                    stds,
-                                                   Rf_rate
+                                                   rf_rate
                                                    )
     
     
@@ -307,11 +304,11 @@ def optimize_portfolio_weights(params,tickers,weights,Rf_rate,tolerance=0.2):
     
     sharpe_ratios, s, slopes = gen_sharp_ratios(port_exp_rets,
                                                         port_stds,
-                                                        Rf_rate,
+                                                        rf_rate,
                                                         )
    
     port_betas = gen_betas(asset_betas,weights)
-    port_alphas = gen_alphas(port_exp_rets,port_betas,Rf_rate,mkt_ret)
+    port_alphas = gen_alphas(port_exp_rets,port_betas,rf_rate,mkt_ret)
     
     
     
@@ -328,3 +325,5 @@ def optimize_portfolio_weights(params,tickers,weights,Rf_rate,tolerance=0.2):
     
     
     return optimization_params
+
+
