@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Aug 25 09:11:46 2020
-
-@author: jmyou
-"""
-
-
-import sys
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QPushButton, QWidget, QTabWidget, QHBoxLayout
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QLineEdit,QFormLayout
@@ -29,7 +20,7 @@ class View(QWidget):
     #Class signals
     new_dir = pyqtSignal(str)
     get_params = pyqtSignal(str,list,str,str,str,str)
-    gen_report = pyqtSignal(str,str)
+    gen_report = pyqtSignal(str,list,list)
     send_data = pyqtSignal(str,str)
     send_table = pyqtSignal(str,list)
     
@@ -214,6 +205,8 @@ class View(QWidget):
         index = self.tabs.currentIndex()
         name = self.tabs.tabText(index)
         self.name = name
+        current_ticks = str(self.tab_dic[self.name]['Tick_box'].text())
+        self.ticker_list = pmt.ticker_parse(current_ticks)
         
         
     def combo_selected(self,text):
@@ -248,12 +241,13 @@ class View(QWidget):
         
         self.tabs.setCurrentWidget(self.tabs.findChild(QWidget,name))
     
-    def build_report(self,name,tickers):
+    def build_report(self):
         """Emits a signal carrying name and tickers arguments to the 
         model component of the optimization window structure, a report
         generation function is then run by the model"""
         
-        self.gen_report.emit(name,tickers)
+        
+        self.gen_report.emit(self.name,self.ticker_list,self.selection)
     
     def request_data(self,key,data_type):
         """Sends a signal to the model requesting data specified by 
@@ -370,7 +364,6 @@ class View(QWidget):
             self.name = name
             
             #stores portfolio parameters in GUI data dictionary
-            
             #intializes a graph widget to plot the generated portfolio data
             graphWidget = pgw.CustomCanvas(self.opt_params)
             
@@ -392,7 +385,7 @@ class View(QWidget):
         """Receives signal from model component carrying dictionaries
         containing data on the optimization process and the portfolio 
         securities"""
-        
+        print(opt_params)
         self.sec_params = sec_params
         self.opt_params = opt_params
         self.ticker_list = ticker_list
@@ -423,7 +416,7 @@ class View(QWidget):
         #Initializes button widgets and connects functions to them
         apply_button = QPushButton('Apply')
         report_button = QPushButton('Generate Report')
-        report_button.clicked.connect(lambda:self.build_report(name,self.ticker_list))
+        report_button.clicked.connect(self.build_report)
         apply_button.setObjectName(name)
         apply_button.clicked.connect(self.apply_plot_settings)
         
