@@ -1,15 +1,5 @@
-# -*- coding: utf-8 -*-
-
-"""
-Created on Tue Aug 25 08:55:07 2020
-
-@author: jmyou
-"""
-
-
-
 from PyQt5.QtCore import pyqtSignal, QObject
-from PyQt5.QtWidgets import  QFileDialog
+from PyQt5.QtWidgets import  QFileDialog, QWidget, QMainWindow
 from portfolio_class import Portfolio
 import pmaso_tools as pmt
 
@@ -56,20 +46,19 @@ class Model(QObject):
         self.get_params.emit(sec_params,opt_params,ticker_list)
         #returns the parameter dictionaries generated
     
-    def gen_report(self,name,tickers):
+    def gen_report(self,name,tickers,selection):
         """This function allows the user to save key information regarding their generated
         portfolio data to an excel file, which is commonly used in financial services
         """
         #Opens a file explorer window for the user to set a save file name/directory
-        fname, _ = QFileDialog.getSaveFileName(self,
-                                                   'Save File',
+        fname, _ = QFileDialog.getSaveFileName(None,'Save File',
                                                    'c:/',
                                                    'Excel Files (*.xlsx)')
         
       
        
         #Generates the report
-        pmt.gen_report(tickers,self.data[name]['Opt'],fname)
+        pmt.gen_report(tickers,self.data[name]['Opt'],fname,selection)
     
     def get_data(self,name,data_type):
         """Grabs data from model class 'data' attribute and fulfills request
