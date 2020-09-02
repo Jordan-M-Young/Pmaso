@@ -56,14 +56,7 @@ def get_perms(num_assets,bounds):
     
     return perms
 
-def gen_report(tickers,opt_params,fname):
-    
-    """Called by a ResultsWindow class method,
-    this function generates an excel file report
-    of the portfolios generated during the optimization.
-    Information on the 'Best Portfolios' the efficient frontier
-    and individual assets is included
-    """
+def gen_report(tickers,opt_params,fname,selection):
     
     if '.xlsx' not in fname or '.xls' not in fname:
             fname = fname + '.xlsx'
@@ -71,38 +64,48 @@ def gen_report(tickers,opt_params,fname):
     
     op = opt_params
     
-    sheets = ['Best Portfolios','Efficient Frontier','Asset']
+    sheets = ['Selected Portfolios','All Portfolios','Asset']
     
     #Sheet One: Best Parameters
-    s1_v = op['Best_Portfolios']
-    sh1 = [[s1_v[k][key] for key in s1_v[k].keys()] for k in s1_v.keys()]
-
-    for i in range(len(sh1)):
-        for j in reversed(range(len(sh1[i][3]))):
-            sh1[i].insert(4,sh1[i][3][j])
-        del(sh1[i][3])
+    
         
     
-    cl = [key for key in s1_v['0'].keys() if key != 'Weights']
+    cl = ['Std Deviation','Expected Returns','Sharpe Ratio','ALpha','Beta']
     for i in reversed(range(len(tickers))):
-        cl.insert(3,tickers[i])
-    sh1 = pd.DataFrame(sh1,columns=cl)
+        cl.insert(5,tickers[i])
+    sh1 = pd.DataFrame(selection,columns=cl)
     
     
-    #Sheet Two: Frontier Parameters
-    s2_v = op['Frontier Portfolios']
-    sh2 = [[s2_v[k][key] for key in s2_v[k].keys()] for k in s2_v.keys()]
-
-    for i in range(len(sh2)):
-        for j in reversed(range(len(sh2[i][3]))):
-            sh2[i].insert(4,sh2[i][3][j])
-        del(sh2[i][3])
+    #Sheet Two: All Portfolios
+    alphas = op['Alphas']
+    betas = op['Betas']
+    sharpes = op['Portfolio_Sharpe_Ratios']
+    rets = op['Portfolio_Space_Returns']
+    stds = op['Portfolio_Space_Stds']
+    weights = op['Weights']
+    
+    
+    cl = ['Std Deviation','Expected Returns','Sharpe Ratio','ALpha','Beta']
+    for i in reversed(range(len(tickers))):
+        cl.insert(5,tickers[i])
         
-    
-    cl = [key for key in s2_v['0'].keys() if key != 'Weights']
-    for i in reversed(range(len(tickers))):
-        cl.insert(3,tickers[i])
-    sh2 = pd.DataFrame(sh2,columns=cl)
+        
+        
+    ports = [[float(stds[i]),
+              float(rets[i]),
+              float(sharpes[i]),
+              float(alphas[i]),
+              float(betas[i])] for i in range(len(alphas))]
+        
+        #Packs all values into a list of lists
+    num = len(ports[0]) 
+    for j in range(len(ports)):
+        for i in reversed(range(len(weights[0]))):
+            ports[j].insert(num,float(weights[j][i]))
+                
+                
+                
+    sh2 = pd.DataFrame(ports,columns=cl)
     
     
     #Sheet Three: Assest Parameters
@@ -112,8 +115,8 @@ def gen_report(tickers,opt_params,fname):
     sh3 = pd.DataFrame(sh3,index=cl,columns=rw).T
     
     
-    #Writes pandas dataframe to .xlsx file
+    
     with pd.ExcelWriter(fname) as writer:
-        sh1.to_excel(writer,'Best_Portfolios')
-        sh2.to_excel(writer,'Frontier_Portfolios')
+        sh1.to_excel(writer,'Selected Portfolios')
+        sh2.to_excel(writer,'All Portfolios')
         sh3.to_excel(writer,'Assets')
