@@ -7,9 +7,9 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 
 
 
-import pmaso_tools as pmt
-from external_worker import External
-import pmaso_gui_widgets as pgw
+import pmaso.finlogic.pmaso_tools as pmt
+from pmaso.gui.external_worker import External
+import pmaso.gui.pmaso_gui_widgets as pgw
 
 
 class View(QWidget):

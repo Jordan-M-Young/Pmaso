@@ -5,7 +5,7 @@ Created on Tue Aug 25 11:51:27 2020
 @author: jmyou
 """
 from PyQt5.QtCore import pyqtSignal,QThread
-import pmaso_tools as pmt
+import pmaso.finlogic.pmaso_tools as pmt
 import numpy as np
 
 class External(QThread):

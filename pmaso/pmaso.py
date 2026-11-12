@@ -3,9 +3,9 @@ import PyQt5
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets as qtw
 
-from optimization_window import Optimization_Window
-import portfolio_class_tools as pct
-
+from pmaso.gui.optimization_window import Optimization_Window
+import pmaso.finlogic.portfolio_class_tools as pct
+import pmaso.finlogic.pmaso_tools as pt
 class MainWindow(qtw.QMainWindow):
     """Opening window of pmaso software portfolio names and tickers
     are entered here and then are passed to an optimizer window"""
@@ -176,7 +176,6 @@ class MainWindow(qtw.QMainWindow):
             for i in reversed(range(self.main_layout.count())):
                 if i >  5*self.portfolio_rows - 4:
                     self.remove_element(i)
-                    print(i)
         
         
             self.portfolio_rows -= 1
@@ -218,7 +217,7 @@ class MainWindow(qtw.QMainWindow):
             widgetToRemove = self.main_layout.itemAt(i).widget()
             if widgetToRemove == b:
                 fname, _ = qtw.QFileDialog.getOpenFileName(self,'Save File')
-                portfolio, tickers = pct.load_port(fname)
+                portfolio, tickers = pt.load_portfolio(fname)
                 self.main_layout.itemAt(i+1).widget().setText(portfolio)
                 self.main_layout.itemAt(i+2).widget().setText(tickers)
                                
@@ -255,9 +254,12 @@ class MainWindow(qtw.QMainWindow):
         
         
         
-if __name__ == '__main__':
-    
+def main():
     app = qtw.QApplication(sys.argv)
     mw = MainWindow()
     sys.exit(app.exec())
+
+
+if __name__ == '__main__':
+    main()
     

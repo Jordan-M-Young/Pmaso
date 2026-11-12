@@ -1,0 +1,23 @@
+[project]
+name = "pmaso"
+version = "0.1.0"
+description = "Efficient Market Portfolio Exploration Tool"
+authors = [
+    {name = "Jordan-M-Young"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy (>=2.5.4,<3.0.0)",
+    "matplotlib (>=3.11.2,<4.0.0)",
+    "pandas (>=3.1.1,<4.0.0)",
+    "pyqt5 (>=5.15.11,<6.0.0)"
+]
+
+[project.scripts]
+pmaso = "pmaso.pmaso:main"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

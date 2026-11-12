@@ -1,7 +1,7 @@
 from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtWidgets import  QFileDialog, QWidget, QMainWindow
-from portfolio_class import Portfolio
-import pmaso_tools as pmt
+from pmaso.finlogic.portfolio_class import Portfolio
+import pmaso.finlogic.pmaso_tools as pmt
 
 class Model(QObject):
     

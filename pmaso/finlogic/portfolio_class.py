@@ -1,5 +1,5 @@
-import portfolio_class_tools as pct
-import portfolio_optimization as pop
+import pmaso.finlogic.portfolio_class_tools as pct
+import pmaso.finlogic.portfolio_optimization as pop
 
 
 
