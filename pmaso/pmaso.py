@@ -1,11 +1,12 @@
 import sys
+
 import PyQt5
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets as qtw
 
-from pmaso.gui.optimization_window import Optimization_Window
-import pmaso.finlogic.portfolio_class_tools as pct
 import pmaso.finlogic.pmaso_tools as pt
+import pmaso.finlogic.portfolio_class_tools as pct
+from pmaso.gui.optimization_window import Optimization_Window
 
 
 class MainWindow(qtw.QMainWindow):

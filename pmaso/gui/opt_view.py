@@ -1,14 +1,23 @@
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QPushButton, QWidget, QTabWidget, QHBoxLayout
-from PyQt5.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QFormLayout
-from PyQt5.QtWidgets import QProgressBar, QGridLayout, QCheckBox, QTableView
-
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import (
+    QCheckBox,
+    QFormLayout,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QProgressBar,
+    QPushButton,
+    QTableView,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 import pmaso.finlogic.pmaso_tools as pmt
-from pmaso.gui.external_worker import External
 import pmaso.gui.pmaso_gui_widgets as pgw
+from pmaso.gui.external_worker import External
 
 
 class View(QWidget):

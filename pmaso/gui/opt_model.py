@@ -1,7 +1,8 @@
-from PyQt5.QtCore import pyqtSignal, QObject
-from PyQt5.QtWidgets import QFileDialog, QWidget, QMainWindow
-from pmaso.finlogic.portfolio_class import Portfolio
+from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtWidgets import QFileDialog
+
 import pmaso.finlogic.pmaso_tools as pmt
+from pmaso.finlogic.portfolio_class import Portfolio
 
 
 class Model(QObject):
@@ -76,7 +77,7 @@ class Model(QObject):
         x = [list(sel[i].data) for i in range(len(sel))]
 
         # Returns of the selection array
-        rets = [float(x[i][1]) for i in range(0, len(x))]
+        rets = [float(x[i][1]) for i in range(len(x))]
 
         # Pertinent portfolio parameters
         alphas = opt_params["Alphas"]

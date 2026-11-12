@@ -1,7 +1,8 @@
 import itertools
-import numpy as np
 import math
 import random as rand
+
+import numpy as np
 
 
 def cov(ret1, ret2):

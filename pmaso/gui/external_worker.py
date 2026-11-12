@@ -1,13 +1,13 @@
-# -*- coding: utf-8 -*-
 """
 Created on Tue Aug 25 11:51:27 2020
 
 @author: jmyou
 """
 
-from PyQt5.QtCore import pyqtSignal, QThread
-import pmaso.finlogic.pmaso_tools as pmt
 import numpy as np
+from PyQt5.QtCore import QThread, pyqtSignal
+
+import pmaso.finlogic.pmaso_tools as pmt
 
 
 class External(QThread):

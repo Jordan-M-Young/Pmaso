@@ -1,8 +1,8 @@
-from matplotlib.figure import Figure
-from matplotlib.widgets import LassoSelector
-from matplotlib.path import Path
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from matplotlib.path import Path
+from matplotlib.widgets import LassoSelector
 from PyQt5 import QtCore as qtc
 from PyQt5 import QtWidgets as qtw
 
@@ -34,7 +34,7 @@ class CustomComboBox(qtw.QComboBox):
             self.box_choices = ["100", "500", "1000", "5000", "10000", "50000"]
 
 
-class SelectFromCollection(object):
+class SelectFromCollection:
     """Select indices from a matplotlib collection using `LassoSelector`.
 
     Selected indices are saved in the `ind` attribute. This tool fades out the

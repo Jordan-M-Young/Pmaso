@@ -1,7 +1,9 @@
 import sys
+
 from PyQt5 import QtWidgets as qtw
-import pmaso.gui.opt_view as ov
+
 import pmaso.gui.opt_model as om
+import pmaso.gui.opt_view as ov
 
 
 class Optimization_Window(qtw.QMainWindow):
