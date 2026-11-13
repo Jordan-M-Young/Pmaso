@@ -17,6 +17,8 @@ dependencies = [
 
 [project.scripts]
 pmaso = "pmaso.pmaso:main"
+download = "scripts.download:main"
+build_tickers = "scripts.build_tickers:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -24,4 +26,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.17.5"
+yfinance = "^1.8.0"
+tqdm = "^4.70.1"
 

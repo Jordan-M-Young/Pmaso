@@ -1,0 +1,5 @@
+exports/*
+.ruff_cache
+.venv
+*.pyc
+poetry.lock
